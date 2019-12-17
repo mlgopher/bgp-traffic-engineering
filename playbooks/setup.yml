@@ -1,0 +1,43 @@
+---
+- hosts: all
+  name: Initial setup for the nodes
+  become: yes
+
+  tasks:
+    - name: Disable Swap on the nodes
+      shell: swapoff -a
+
+    - name: install APT Transport HTTPS
+      apt:
+        name: apt-transport-https
+        state: present
+
+    - name: Add apt-key for Kubernetes
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add the APT repository for Kubernetes
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: 'kubernetes'
+
+    - name: Update the APT repositories
+      apt:
+        update_cache: yes
+
+    - name: Installing required packages
+      apt:
+        name: '{{ packages }}'
+        state: present
+
+    - name: Enabling and starting the required services
+      service:
+        name: '{{ item }}'
+        state: started
+        enabled: yes
+      with_items: '{{ services }}'
+
+    - name: Enabling Bridge Firewall Rule
+      shell: 'sysctl net.bridge.bridge-nf-call-iptables=1'

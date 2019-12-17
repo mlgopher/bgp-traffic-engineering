@@ -1,0 +1,9 @@
+---
+- hosts: all
+  tasks:
+    - name: Include the variables
+      include_vars: env.vars
+
+- import_playbook: playbooks/test.yml
+- import_playbook: playbooks/setup.yml
+- import_playbook: playbooks/master.yml

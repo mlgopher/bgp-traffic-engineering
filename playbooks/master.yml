@@ -1,0 +1,51 @@
+---
+- hosts: all
+  name: Setup the master node
+
+  tasks:
+    - name: Pulling images required for setting up a Kubernetes cluster
+      shell: kubeadm config images pull
+      become: yes
+
+    - name: Resetting kubeadm
+      shell: kubeadm reset -f
+      become: yes
+
+    - name: Initializing Kubernetes cluster
+      shell: kubeadm init --pod-network-cidr={{ pod_cidr }}
+      become: yes
+      register: output
+      args:
+        chdir: '{{ ansible_env.HOME }}'
+
+    - name: Save cluster output
+      copy:
+        content: '{{ output.stdout }}'
+        dest: $HOME/cluster_init.txt
+
+    - name: create .kube directory
+      file:
+        path: '{{ ansible_env.HOME }}/.kube'
+        state: directory
+        mode: 0755
+
+    - name: Copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: '{{ ansible_env.HOME }}/.kube/config'
+        owner: '{{ ansible_user }}'
+        remote_src: yes
+      become: yes
+
+    - name: Install Pod network
+      shell: kubectl apply -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter.yaml >> '{{ log_file }}'
+      args:
+        chdir: '{{ ansible_env.HOME }}'
+        creates: '{{ log_file }}'
+
+    - name: Get join command
+      shell: kubeadm token create --print-join-command
+      register: MASTER_JOIN_RAW
+
+    - name: Copy the joining
+      local_action: copy content={{ MASTER_JOIN_RAW.stdout }} dest={{ token_file }}

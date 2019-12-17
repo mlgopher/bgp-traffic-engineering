@@ -1,0 +1,10 @@
+---
+- name: Hello World
+  hosts: all
+  gather_facts: false
+  vars:
+    greeting: Hello World! This is Ansible doing things.
+
+  tasks:
+  - name: Testing Ansible playbook
+    shell: echo "{{ greeting }}"
