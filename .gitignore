@@ -4,7 +4,6 @@
 **.tfstate
 **.lock.info
 **.inventory
-**.tfvars.json
 **.keys.json
 
 .terraform/
@@ -15,4 +14,4 @@ resources/
 **.retry
 .Rproj.user
 
-cmd_*.sh
+
